@@ -1,65 +1,152 @@
-import { Component } from '@angular/core';
+// src/app/clientes/clientes.component.ts
+import { Component, OnInit } from '@angular/core';
+import { Client } from './client.model';
+import { ClientService } from './client.service';
 
 @Component({
   selector: 'app-clientes',
   templateUrl: './clientes.component.html',
-  styleUrls: ['./clientes.component.css']
+  styleUrls: ['./clientes.component.css'],
 })
-export class ClientesComponent {
-  showAddClientForm = false; // Variable pour gérer la visibilité du formulaire
-
-  // Tableau pour stocker les clients
-  clients = [
-    {
-      nom: 'Dupont',
-      prenom: 'Jean',
-      telephone: '0600000000',
-      adresse: '123 Rue A',
-      email: 'jean.dupont@example.com',
-      dateNaissance: '1980-01-01',
-      numCIN: 'AB123456',
-      codePostal: '75001'
-    },
-    // Ajoutez d'autres clients ici si nécessaire
-  ];
-
-  // Variables pour stocker les valeurs du formulaire
-  newClient = {
+export class ClientesComponent implements OnInit {
+  clients: Client[] = [];
+  filteredClients: Client[] = []; // Array to store the filtered clients
+  newClient: Client = {
     nom: '',
     prenom: '',
     telephone: '',
     adresse: '',
     email: '',
-    dateNaissance: '',
+    dateNaissance: new Date(),
     numCIN: '',
-    codePostal: ''
+    codePostal: '',
   };
+  showAddClientForm: boolean = false;
+  editingClientId: string | null = null; // ID of the client being edited
 
-  toggleAddClientForm() {
-    this.showAddClientForm = !this.showAddClientForm;
+  constructor(private clientService: ClientService) {}
+
+  ngOnInit() {
+    this.getClients();
   }
 
-  saveClient() {
-    // Ajouter le nouveau client au tableau des clients
-    this.clients.push({ ...this.newClient });
+  getClients() {
+    this.clientService.getClients().subscribe((data: Client[]) => {
+      this.clients = data;
+      this.filteredClients = data; // Initialize the filtered clients with all clients
+    });
+  }
 
-    // Réinitialiser le formulaire
+  // Filter clients based on the search input
+  filterClients(event: Event) {
+    const searchTerm = (event.target as HTMLInputElement).value.toLowerCase();
+    console.log('Search Term:', searchTerm); // Debugging line to check the search term
+
+    // Filter the clients based on the search term
+    this.filteredClients = this.clients.filter((client) => {
+      // Convert each field to a string and check if it includes the search term
+      const matchesNom = client.nom.toLowerCase().includes(searchTerm);
+      const matchesPrenom = client.prenom.toLowerCase().includes(searchTerm);
+      const matchesTelephone = client.telephone.toLowerCase().includes(searchTerm);
+      const matchesAdresse = client.adresse.toLowerCase().includes(searchTerm);
+      const matchesEmail = client.email.toLowerCase().includes(searchTerm);
+      const matchesDate = new Date(client.dateNaissance).toLocaleDateString().includes(searchTerm);
+      const matchesNumCIN = client.numCIN.toLowerCase().includes(searchTerm);
+      const matchesCodePostal = client.codePostal.toLowerCase().includes(searchTerm);
+
+      // Return true if any of the fields match
+      return (
+        matchesNom ||
+        matchesPrenom ||
+        matchesTelephone ||
+        matchesAdresse ||
+        matchesEmail ||
+        matchesDate ||
+        matchesNumCIN ||
+        matchesCodePostal
+      );
+    });
+
+    console.log('Filtered Clients:', this.filteredClients); // Debugging line to check filtered clients
+  }
+
+
+  // Save or update client
+  saveClient() {
+    if (this.editingClientId) {
+      // If in edit mode, update the client
+      this.clientService.updateClient(this.editingClientId, this.newClient).subscribe(
+        (response) => {
+          console.log('Client updated successfully:', response);
+          this.getClients(); // Refresh the list after updating
+          this.resetNewClient();
+          this.toggleAddClientForm(); // Hide form after saving
+        },
+        (error) => {
+          console.error('Error updating client:', error);
+        }
+      );
+    } else {
+      // Otherwise, add a new client
+      this.clientService.addClient(this.newClient).subscribe(
+        (response) => {
+          console.log('Client added successfully:', response);
+          this.getClients();
+          this.resetNewClient();
+          this.toggleAddClientForm();
+        },
+        (error) => {
+          console.error('Error adding client:', error);
+        }
+      );
+    }
+  }
+
+   // Edit client
+  editClient(client: Client) {
+    this.newClient = { ...client }; // Pre-fill the form with client data
+     this.editingClientId = client._id || null // Set the client ID being edited
+    this.showAddClientForm = true; // Show the form
+  }
+
+  // Delete client
+  deleteClient(clientId: string) {
+    this.clientService.deleteClient(clientId).subscribe(
+      (response) => {
+        console.log('Client deleted successfully:', response);
+        this.getClients(); // Refresh the list after deleting
+      },
+      (error) => {
+        console.error('Error deleting client:', error);
+      }
+    );
+  }
+
+
+  resetNewClient() {
     this.newClient = {
       nom: '',
       prenom: '',
       telephone: '',
       adresse: '',
       email: '',
-      dateNaissance: '',
+      dateNaissance: new Date(),
       numCIN: '',
       codePostal: ''
     };
+        this.editingClientId = null; // Reset editing state
 
-    // Masquer le formulaire
-    this.showAddClientForm = false;
   }
 
+   // Cancel form: reset fields and hide form
   cancel() {
-    this.showAddClientForm = false; // Masquer le formulaire si l'utilisateur annule
+    this.resetNewClient(); // Reset form
+    this.showAddClientForm = false; // Hide form
+  }
+
+  // Toggle form visibility
+  toggleAddClientForm() {
+    this.showAddClientForm = !this.showAddClientForm;
   }
 }
+

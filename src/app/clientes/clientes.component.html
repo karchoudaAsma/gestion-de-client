@@ -12,6 +12,12 @@
             <div class="container">
                 <div class="title">Gestion des Clients</div>
                 <div id="table-wrapper">
+<!-- Add search input above the table -->
+<div class="search-container">
+    <input type="text" id="search-input" placeholder="Rechercher..." (input)="filterClients($event)">
+</div>
+
+<div id="table-wrapper">
     <table id="data-table">
         <thead>
             <tr>
@@ -27,31 +33,42 @@
             </tr>
         </thead>
         <tbody>
-            <tr *ngFor="let client of clients">
+            <tr *ngFor="let client of filteredClients">
                 <td>{{ client.nom }}</td>
                 <td>{{ client.prenom }}</td>
                 <td>{{ client.telephone }}</td>
                 <td>{{ client.adresse }}</td>
                 <td>{{ client.email }}</td>
-                <td>{{ client.dateNaissance }}</td>
+                <td>{{ client.dateNaissance | date: 'dd/MM/yyyy' }}</td>
                 <td>{{ client.numCIN }}</td>
                 <td>{{ client.codePostal }}</td>
                 <td>
-                    <button class="button-action">Modifier</button>
-                    <button class="button-action">Supprimer</button>
-                    <button><b><a class="button-contracts" [routerLink]="['/contrat']" href="contrat.component.html">CONTRATS</a></b></button> <br>
+                    <button class="button-action" (click)="editClient(client)">Modifier</button>
+                    <button class="button-action" *ngIf="client._id" (click)="deleteClient(client._id)">Supprimer</button>
+                    <button>
+                        <b>
+                           <!--  <a class="button-contracts" [routerLink]="['/contrat']" href="contrat.component.html">CONTRATS</a>
+                         -->
+                        <a class="button-contracts" [routerLink]="['/contrat', client._id, client.nom]"  href="contrat.component.html">CONTRATS</a>
+
+                        
+                        </b>
+                    </button>
+                    <br>
                 </td>
             </tr>
         </tbody>
     </table>
 </div>
+
+
 <!-- Bouton pour ajouter un client -->
 <div class="add-button-wrapper">
-    <button class="button-add" (click)="toggleAddClientForm()">Ajouter un client</button>
+    <button class="button-add" (click)="toggleAddClientForm()" >Ajouter un client</button>
 </div>
 
 <!-- Formulaire modal pour ajouter un client -->
-<div id="add-client-form" *ngIf="showAddClientForm" class="form-container">
+<div id="add-client-form" *ngIf="showAddClientForm"  class="form-container">
     <h3>Ajouter un nouveau client</h3>
     <form>
         <label for="nom">Nom</label>
@@ -80,7 +97,7 @@
 
         <div class="form-buttons">
             <button type="button" class="button-action" (click)="saveClient()">Enregistrer</button>
-            <button type="button" class="button-action" (click)="cancel()">Annuler</button>
+            <button type="button" class="button-action" (click)="cancel()" >Annuler</button>
         </div>
     </form>
 </div>
@@ -94,5 +111,6 @@
             </div>
         </div>
     </div>
+</div>
 </body>
 </html>

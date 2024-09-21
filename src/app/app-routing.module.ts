@@ -34,7 +34,8 @@ const appRoute: Routes =[
     {path:'smartphone', component:SmartphoneComponent},
     {path:'tablettes', component:TablettesComponent},
     {path:'accessoires', component:AccessoriesComponent},
-    {path:'contrat', component:ContratComponent},
+    {path:'contrat/:clientId/:clientName', component:ContratComponent},
+ 
   ]
 
 

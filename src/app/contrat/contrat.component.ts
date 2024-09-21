@@ -1,73 +1,154 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { Contrat } from './contrat.model';
+import { ContratService } from './contrat.service';
+import { ActivatedRoute } from '@angular/router';  // To get client ID from the route
+
 
 @Component({
   selector: 'app-contrat',
   templateUrl: './contrat.component.html',
   styleUrls: ['./contrat.component.scss']
 })
-export class ContratComponent {
-  showAddContractForm = false; // Variable pour gérer la visibilité du formulaire
-
-  // Tableau pour stocker les contrats
-  contracts = [
-    {
-      type: 'Forfait Orange',
-      service: 'Mobile',
-      startDate: '2023-01-01',
-      endDate: '2024-01-01',
-      status: 'Actif'
-    },
-    {
-      type: 'Achat Ligne Réseau',
-      service: 'Internet',
-      startDate: '2023-02-15',
-      endDate: '2025-02-15',
-      status: 'En attente'
-    },
-    {
-      type: 'Achat Smartphone',
-      service: 'Téléphonie',
-      startDate: '2023-03-20',
-      endDate: '2024-03-20',
-      status: 'Actif'
-    }
-  ];
-
-  // Variables pour stocker les valeurs du formulaire
-  newContract = {
-    type: '',
+export class ContratComponent implements OnInit {
+    contracts: Contrat[] = [];
+  clientId: string | null = null;  // Client ID to load contracts
+  newContract: Contrat = {
+    contraType: '',
     service: '',
-    startDate: '',
-    endDate: '',
-    status: ''
+    beginDate: '',
+    finDate: '',
+    status: '',
+    clientId: ''
   };
+  showAddContractForm: boolean = false;
+  editingContractId: string | null = null;
+   clientName: string = '';
 
-  toggleAddContractForm() {
-    this.showAddContractForm = !this.showAddContractForm;
+  constructor(
+  private contratService: ContratService,
+  private route: ActivatedRoute // Inject ActivatedRoute to access route parameters
+) {}
+
+
+  ngOnInit(): void {
+  this.clientId = this.route.snapshot.paramMap.get('clientId'); // Get client ID from route
+  if (this.clientId) {
+    this.getContracts(this.clientId); // Fetch contracts if client ID is available
   }
+  this.clientName = this.route.snapshot.paramMap.get('clientName') || '';
+}
 
-  saveContract() {
-    // Ajouter le nouveau contrat au tableau des contrats
-    this.contracts.push({ ...this.newContract });
 
-    // Réinitialiser le formulaire
-    this.newContract = {
-      type: '',
-      service: '',
-      startDate: '',
-      endDate: '',
-      status: ''
-    };
-
-    // Masquer le formulaire
-    this.showAddContractForm = false;
-  }
-
-  cancel() {
-    this.showAddContractForm = false; // Masquer le formulaire si l'utilisateur annule
-  }
+  // Get all contracts
+getContracts(clientId: string): void {
+  this.contratService.getContracts(clientId).subscribe(
+    (data: Contrat[]) => {
+      console.log('Fetched contracts:', data);  // Log fetched contracts
+      this.contracts = data;
+    },
+    (error) => {
+      console.error('Error fetching contracts:', error);
+    }
+  );
 }
 
 
 
+  // Save or update contract
+ saveContract(): void {
+     console.log('Client ID:', this.clientId); // Log client ID
+    console.log('New Contract Before Submit:', this.newContract); // Log contract data
 
+    if (this.editingContractId) {
+        // Update existing contract
+        this.contratService.updateContrat(this.editingContractId, this.newContract).subscribe(
+            (response) => {
+                console.log('Contract updated successfully:', response);
+                if (this.clientId) {
+                    this.getContracts(this.clientId);
+                }
+                this.resetNewContract();
+                this.toggleAddContractForm();
+            },
+            (error) => {
+                console.error('Error updating contract:', error);
+            }
+        );
+    } else {
+        // Add new contract
+        if (this.clientId) {
+            this.newContract.clientId = this.clientId; // Set the clientId here
+        }
+        this.contratService.addContrat(this.newContract).subscribe(
+            (response) => {
+                console.log('Contract added successfully:', response);
+                if (this.clientId) {
+                    this.getContracts(this.clientId);
+                }
+                this.resetNewContract();
+                this.toggleAddContractForm();
+            },
+            (error) => {
+                console.error('Error adding contract:', error);
+            }
+        );
+    }
+}
+private refreshContracts(): void {
+    if (this.clientId) {
+        this.getContracts(this.clientId); // Refresh the list with clientId
+    }
+    this.resetNewContract();
+    this.toggleAddContractForm();
+}
+
+
+  // Edit contract
+  editContract(contract: Contrat): void {
+    this.newContract = { ...contract }; // Pre-fill form with contract data
+    this.editingContractId = contract._id || null; // Set the contract ID for editing
+    this.showAddContractForm = true;
+  }
+
+  // Delete contract
+  // Delete contract
+deleteContract(contractId: string): void {
+  if (contractId) {
+    this.contratService.deleteContrat(contractId).subscribe(
+      (response) => {
+        console.log('Contract deleted successfully:', response);
+        if (this.clientId) {
+          this.getContracts(this.clientId); // Refresh the list with clientId
+        }
+      },
+      (error) => {
+        console.error('Error deleting contract:', error);
+      }
+    );
+  }
+}
+
+
+  // Reset new contract form
+  resetNewContract(): void {
+    this.newContract = {
+      contraType: '',
+      service: '',
+      beginDate: '',
+      finDate: '',
+      status: ''
+    };
+    this.editingContractId = null;
+  }
+
+  // Toggle the add contract form
+  toggleAddContractForm(): void {
+    this.showAddContractForm = !this.showAddContractForm;
+  }
+
+  // Cancel adding or editing contract
+  cancel(): void {
+    this.resetNewContract();
+    this.showAddContractForm = false;
+  }
+}

@@ -27,6 +27,8 @@ import { ContratComponent } from './contrat/contrat.component';
 import { TablettesComponent } from './tablettes/tablettes.component';
 import { AccessoriesComponent } from './accessories/accessories.component';
 import { PopupComponent } from './popup/popup.component';
+import { AuthService } from './auth.service'; // Import the auth service you created
+
 //import { LoginComponent } from './login/login.component';
 //import { LconctionComponent } from './lconction/lconction.component';
 //import { ConnectionComponent } from './connection/connection.component';
@@ -65,6 +67,7 @@ import { PopupComponent } from './popup/popup.component';
     AppRoutingModule,
   ],
   //providers: [ClienteService],
+  providers: [],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {}

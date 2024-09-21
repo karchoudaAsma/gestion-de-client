@@ -182,3 +182,61 @@ input[type="submit"]:active
 
 }
 
+/* ********************************************************************************************* */
+.connect-btn{
+  color: orangered;
+}
+
+.error-box {
+  background-color: #f8d7da; // Soft red background
+  color: #721c24; // Dark red text color
+  border: 1px solid #f5c6cb; // Light red border
+  padding: 15px 20px; // Extra padding for better spacing
+  margin-top: 20px; // Increased margin
+  border-radius: 8px; // Rounded corners
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); // Subtle shadow for depth
+  text-align: center; 
+  font-size: 16px; // Slightly larger font size
+  font-weight: bold; // Bold text for emphasis
+  display: flex;
+  justify-content: center; // Center align text
+  align-items: center;
+  position: relative;
+
+  // Animation for error message
+  animation: shake 0.5s ease-in-out;
+
+  &::before {
+    content: '⚠️'; // Warning icon
+    font-size: 24px; // Larger icon size
+    //position: absolute;
+    left: 15px;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(to right, #f5c6cb, transparent, #f5c6cb);
+    animation: pulse 1.5s infinite;
+  }
+}
+
+// Keyframes for shake animation
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+  100% { transform: translateX(0); }
+}
+
+// Keyframes for pulse animation
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
